@@ -1,4 +1,4 @@
-﻿namespace ActionableEmail.OrdersModel
+﻿namespace ActionableEmail.ExpensesModel
 {
     class Nominal
     {

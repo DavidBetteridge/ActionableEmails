@@ -43,7 +43,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CreateOrderApprovalEmail.cs" />
+    <Compile Include="ExpensesModel\BuildExpensesApprovalCard.cs" />
+    <Compile Include="ExpensesModel\ExampleClaimBuilder.cs" />
+    <Compile Include="ExpensesModel\ExpenseClaim.cs" />
+    <Compile Include="ExpensesModel\Line.cs" />
+    <Compile Include="ExpensesModel\Nominal.cs" />
+    <Compile Include="OrderModel\BuildOrderApprovalCard.cs" />
+    <Compile Include="OrderModel\ExampleOrderBuilder.cs" />
     <Compile Include="OrderModel\Line.cs" />
     <Compile Include="MessageCardModel\Action.cs" />
     <Compile Include="MessageCardModel\ActionCard.cs" />

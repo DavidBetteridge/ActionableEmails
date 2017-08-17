@@ -1,17 +1,11 @@
 ﻿using MessageCard;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ActionableEmail
+namespace ActionableEmail.OrdersModel
 {
-    class CreateOrderApprovalEmail
+    class BuildOrderApprovalCard
     {
-        public void CreateEmail(OrderHeader order)
+        public Card CreateCard(OrderHeader order)
         {
             var card = new Card();
             card.ThemeColor = "0099CC";
@@ -124,50 +118,15 @@ namespace ActionableEmail
                  }
             };
             headerSection.Actions.Add(viewClaim);
+            return card;
 
 
-            var body = LoadDocumentMessageBody(card);
 
-            var subject = "Authorise Order : " + order.OrderNumber;
-
-            var e = "davidabetteridge";
-            var mail = new MailMessage(e, e);
-            SmtpClient client = new SmtpClient();
-            client.Port = 25;
-            client.Host = "mailcore.as13009.net";
-
-            //client.Host = "smtp.gmail.com";
-            //client.Port = 587;
-            //client.EnableSsl = true;
-            //client.Timeout = 10000;
-            //client.DeliveryMethod = SmtpDeliveryMethod.Network;
-            //client.UseDefaultCredentials = false;
-            //client.Credentials = new NetworkCredential("davidabetteridge@gmail.com", "");
-
-
-            mail.Subject = subject;
-            mail.IsBodyHtml = true;
-            mail.Body = body;
-            client.Send(mail);
 
 
         }
 
-        private static string LoadDocumentMessageBody(Card document)
-        {
-            return
-                "<html>" +
-                "  <head>" +
-                "    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">" +
-                "    <script type=\"application/ld+json\">" +
-                document.ToJson() +
-                "    </script>" +
-                "  <head>" +
-                "  <body>" +
-                "    Your email client cannot display this email - try using https://outlook.office.com/owa/" +
-                "  </body>" +
-                "</html>";
-        }
+
 
     }
 }
