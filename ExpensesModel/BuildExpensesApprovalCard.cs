@@ -6,24 +6,52 @@ namespace ActionableEmail
 {
     class BuildExpensesApprovalCard
     {
-        public Card CreateCard(ExpenseClaim expenseClaim)
+        public Card CreateCard(ExpenseClaim expenseClaim, Connection connection)
         {
 
             var card = new Card();
             card.ThemeColor = "0099CC";
             card.HideOriginalBody = true;
-            card.Title = "Expense Claim is pending your approval";
+
+            switch (expenseClaim.Status)
+            {
+                case Status.Pending:
+                    card.Title = "Expense Claim is pending your approval";
+                    break;
+                case Status.Approved:
+                    card.Title = "Expense Claim has been approved";
+                    break;
+                case Status.Rejected:
+                    card.Title = "Expense Claim has been rejected - " + expenseClaim.ApprovalComment;
+                    break;
+                default:
+                    break;
+            }
+
 
             var headerSection = new Section();
             card.Sections = new List<Section>() { headerSection };
 
-            headerSection.ActivityImage = "https://acceleratedpayments.proactisp2p.com:8000/outlook/david.jpg";
+            headerSection.ActivityImage = connection.SiteURL + "/david.jpg";
             headerSection.ActivityTitle = $"Claimant is {expenseClaim.Claimant}";
             headerSection.ActivitySubtitle = expenseClaim.ClaimantEmailAddress;
             headerSection.ActivityText = expenseClaim.Title;
 
-
-            headerSection.Text = $"Expense Claim {expenseClaim.ClaimNumber} requires your authorisation. ";
+            switch (expenseClaim.Status)
+            {
+                case Status.Pending:
+                    headerSection.Text = $"Expense Claim {expenseClaim.ClaimNumber} requires your authorisation.";
+                    break;
+                case Status.Approved:
+                    headerSection.Text = $"Expense Claim {expenseClaim.ClaimNumber} has been approved.";
+                    break;
+                case Status.Rejected:
+                    headerSection.Text = $"Expense Claim {expenseClaim.ClaimNumber} has been rejected.";
+                    break;
+                default:
+                    break;
+            }
+            
             headerSection.Facts = new List<Fact>();
 
             headerSection.Facts.Add(new Fact() { Name = "Claim No", Value = expenseClaim.ClaimNumber });
@@ -35,44 +63,47 @@ namespace ActionableEmail
 
             headerSection.Actions = new List<MessageCard.Action>();
 
-            var approvalActionCard = new ActionCard();
-            headerSection.Actions.Add(approvalActionCard);
-            approvalActionCard.Name = "Approve";
-            approvalActionCard.Actions = new List<ExternalAction>()
+            if (expenseClaim.Status == Status.Pending)
             {
-                new HttpPOST() {
-                    Name = "Approve",
-                    Target = "https://acceleratedpayments.proactisp2p.com:8000/outlook/expense/approve",
-                    Body = "{'database': 'LIVE',  'id': 'EXP1234' }",
-                    BodyContentType = "application/json"
-                }
-            };
-
-            var rejectionActionCard = new ActionCard();
-            headerSection.Actions.Add(rejectionActionCard);
-            rejectionActionCard.Name = "Reject";
-
-            rejectionActionCard.Inputs = new List<Input>()
-            {
-                new TextInput()
+                var approvalActionCard = new ActionCard();
+                headerSection.Actions.Add(approvalActionCard);
+                approvalActionCard.Name = "Approve";
+                approvalActionCard.Actions = new List<ExternalAction>()
                 {
-                    Id="comment",
-                    IsMultiline=true,
-                    IsRequired=true,
-                    Title="Explain why the expense claim is rejected",
-                    Value=""
-                }
-            };
+                    new HttpPOST() {
+                        Name = "Approve",
+                        Target = connection.SiteURL + "/expense/approve",
+                        Body = "{'database': '" + connection.DatabaseTitle + "',  'id': '" + expenseClaim.UniqueID + "' }",
+                        BodyContentType = "application/json"
+                    }
+                };
 
-            rejectionActionCard.Actions = new List<ExternalAction>()
-            {
-                new HttpPOST() {
-                    Name = "Reject",
-                    Target = "https://acceleratedpayments.proactisp2p.com:8000/outlook/expense/reject",
-                    Body = "{'database': 'LIVE',  'id': 'EXP1234', 'comment': '{{comment.value}}' }",
-                    BodyContentType = "application/json"
-                }
-            };
+                var rejectionActionCard = new ActionCard();
+                headerSection.Actions.Add(rejectionActionCard);
+                rejectionActionCard.Name = "Reject";
+
+                rejectionActionCard.Inputs = new List<Input>()
+                {
+                    new TextInput()
+                    {
+                        Id="comment",
+                        IsMultiline=true,
+                        IsRequired=true,
+                        Title="Explain why the expense claim is rejected",
+                        Value=""
+                    }
+                };
+
+                rejectionActionCard.Actions = new List<ExternalAction>()
+                {
+                    new HttpPOST() {
+                        Name = "Reject",
+                        Target =  connection.SiteURL + "/expense/reject",
+                        Body = "{'database': '" + connection.DatabaseTitle + "',  'id': '" + expenseClaim.UniqueID + "', 'comment': '{{comment.value}}' }",
+                        BodyContentType = "application/json"
+                    }
+                };
+            }
 
             var viewClaim = new OpenUri()
             {
@@ -82,7 +113,7 @@ namespace ActionableEmail
                      new OpenUriTarget()
                      {
                           OS="default",
-                          Uri="http://www.proactis.com"
+                          Uri=connection.SiteURL
                      }
                  }
             };

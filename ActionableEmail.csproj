@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connection.cs" />
     <Compile Include="ExpensesModel\BuildExpensesApprovalCard.cs" />
     <Compile Include="ExpensesModel\ExampleClaimBuilder.cs" />
     <Compile Include="ExpensesModel\ExpenseClaim.cs" />

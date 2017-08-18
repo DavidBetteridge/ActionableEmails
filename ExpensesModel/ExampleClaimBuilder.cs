@@ -18,7 +18,7 @@
 
             var line1 = new Line()
             {
-                Description = "Some really nice eggs",
+                Description = "Some really nice free-range eggs",
                 Value = 24.5M
             };
             line1.Nominals.Add(new Nominal() { Code = "A.B.C", Value = 20M });

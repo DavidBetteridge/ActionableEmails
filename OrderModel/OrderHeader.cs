@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace ActionableEmail.OrdersModel
 {
+    enum Status
+    {
+        Pending = 0,
+        Approved = 1,
+        Rejected = 2
+    }
     class OrderHeader
     {
         public bool ExceedsBudget { get; set; }
@@ -28,5 +34,10 @@ namespace ActionableEmail.OrdersModel
         public string OrginatorEmailAddress { get; set; }
 
         public List<Line> Lines = new List<Line>();
+
+        public Status Status { get; set; }
+        public string ApprovalComment { get; set; }
+
+        public string UniqueID { get; set; }
     }
 }

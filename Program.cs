@@ -1,6 +1,7 @@
 ﻿using ActionableEmail.ExpensesModel;
 using ActionableEmail.OrdersModel;
 using MessageCard;
+using System;
 using System.Net.Mail;
 
 namespace ActionableEmail
@@ -9,8 +10,15 @@ namespace ActionableEmail
     {
         static void Main(string[] args)
         {
+            var connection = new Connection()
+            {
+                DatabaseTitle = "LIVE",
+                SiteURL = "https://acceleratedpayments.proactisp2p.com:8000/outlook"
+            };
+
             //var exampleOrderBuilder = new ExampleOrderBuilder();
             //var order = exampleOrderBuilder.GetExampleOrder();
+            //order.UniqueID = Guid.NewGuid().ToString();
 
             //var cardBuilder = new BuildOrderApprovalCard();
             //var card = cardBuilder.CreateCard(order);
@@ -19,9 +27,10 @@ namespace ActionableEmail
 
             var exampleClaimBuilder = new ExampleClaimBuilder();
             var claim = exampleClaimBuilder.GetExampleClaim();
+            claim.UniqueID = Guid.NewGuid().ToString();
 
             var cardBuilder = new BuildExpensesApprovalCard();
-            var card = cardBuilder.CreateCard(claim);
+            var card = cardBuilder.CreateCard(claim, connection);
             var subject = "Authorise Expense Claim : " + claim.ClaimNumber;
 
             var body = LoadDocumentMessageBody(card);

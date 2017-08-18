@@ -5,17 +5,31 @@ namespace ActionableEmail.OrdersModel
 {
     class BuildOrderApprovalCard
     {
-        public Card CreateCard(OrderHeader order)
+        public Card CreateCard(OrderHeader order, Connection connection)
         {
             var card = new Card();
             card.ThemeColor = "0099CC";
             card.HideOriginalBody = true;
-            card.Title = "Purchase Order is pending your approval";
+
+            switch (order.Status)
+            {
+                case Status.Pending:
+                    card.Title = "Purchase Order is pending your approval";
+                    break;
+                case Status.Approved:
+                    card.Title = "Purchase Order has been approved";
+                    break;
+                case Status.Rejected:
+                    card.Title = "Purchase Order has been rejected - " + order.ApprovalComment;
+                    break;
+                default:
+                    break;
+            }
 
             var headerSection = new Section();
             card.Sections = new List<Section>() { headerSection };
 
-            headerSection.ActivityImage = "https://acceleratedpayments.proactisp2p.com:8000/outlook/david.jpg";
+            headerSection.ActivityImage = connection.SiteURL + "/david.jpg";
             headerSection.ActivityTitle = $"Orginator is {order.Orginator}";
             headerSection.ActivitySubtitle = order.OrginatorEmailAddress;
 
@@ -24,7 +38,21 @@ namespace ActionableEmail.OrdersModel
                 headerSection.ActivityText = "**This order will exceed the budget by £" + order.OverspentAmount.ToString("0.00") + "**";
             }
 
-            headerSection.Text = $"Purchase order {order.OrderNumber} requires your authorisation. ";
+            switch (order.Status)
+            {
+                case Status.Pending:
+                    headerSection.Text = $"Purchase order {order.OrderNumber} requires your authorisation. ";
+                    break;
+                case Status.Approved:
+                    headerSection.Text = $"Purchase order {order.OrderNumber} has been approved.";
+                    break;
+                case Status.Rejected:
+                    headerSection.Text = $"Purchase order {order.OrderNumber} has been rejected.";
+                    break;
+                default:
+                    break;
+            }
+
             headerSection.Facts = new List<Fact>();
 
             headerSection.Facts.Add(new Fact() { Name = "Order No", Value = order.OrderNumber });
@@ -62,28 +90,28 @@ namespace ActionableEmail.OrdersModel
             }
 
 
-
-
             headerSection.Actions = new List<MessageCard.Action>();
 
-            var approvalActionCard = new ActionCard();
-            headerSection.Actions.Add(approvalActionCard);
-            approvalActionCard.Name = "Approve";
-            approvalActionCard.Actions = new List<ExternalAction>()
+            if (order.Status == Status.Pending)
+            {
+                var approvalActionCard = new ActionCard();
+                headerSection.Actions.Add(approvalActionCard);
+                approvalActionCard.Name = "Approve";
+                approvalActionCard.Actions = new List<ExternalAction>()
             {
                 new HttpPOST() {
                     Name = "Approve",
-                    Target = "https://acceleratedpayments.proactisp2p.com:8000/outlook/expense/approve",
-                    Body = "{'database': 'LIVE',  'id': 'EXP1234' }",
+                    Target = connection.SiteURL + "/order/approve",
+                    Body = "{'database': '" + connection.DatabaseTitle + "',  'id': '" + order.UniqueID + "' }",
                     BodyContentType = "application/json"
                 }
             };
 
-            var rejectionActionCard = new ActionCard();
-            headerSection.Actions.Add(rejectionActionCard);
-            rejectionActionCard.Name = "Reject";
+                var rejectionActionCard = new ActionCard();
+                headerSection.Actions.Add(rejectionActionCard);
+                rejectionActionCard.Name = "Reject";
 
-            rejectionActionCard.Inputs = new List<Input>()
+                rejectionActionCard.Inputs = new List<Input>()
             {
                 new TextInput()
                 {
@@ -95,15 +123,16 @@ namespace ActionableEmail.OrdersModel
                 }
             };
 
-            rejectionActionCard.Actions = new List<ExternalAction>()
-            {
-                new HttpPOST() {
-                    Name = "Reject",
-                    Target = "https://acceleratedpayments.proactisp2p.com:8000/outlook/expense/reject",
-                    Body = "{'database': 'LIVE',  'id': 'EXP1234', 'comment': '{{comment.value}}' }",
-                    BodyContentType = "application/json"
-                }
-            };
+                rejectionActionCard.Actions = new List<ExternalAction>()
+                {
+                    new HttpPOST() {
+                        Name = "Reject",
+                        Target = connection.SiteURL + "/order/reject",
+                        Body = "{'database': '" + connection.DatabaseTitle + "',  'id': '" + order.UniqueID + "', 'comment': '{{comment.value}}' }",
+                        BodyContentType = "application/json"
+                    }
+                };
+            }
 
             var viewClaim = new OpenUri()
             {
@@ -113,20 +142,12 @@ namespace ActionableEmail.OrdersModel
                      new OpenUriTarget()
                      {
                           OS="default",
-                          Uri="http://www.proactis.com"
+                          Uri=connection.SiteURL
                      }
                  }
             };
             headerSection.Actions.Add(viewClaim);
             return card;
-
-
-
-
-
         }
-
-
-
     }
 }
